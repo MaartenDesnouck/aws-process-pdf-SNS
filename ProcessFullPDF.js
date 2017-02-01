@@ -65,7 +65,7 @@ exports.handler = function(event, context) {
                     temp_file = mktemp.createFileSync("/tmp/XXXXXXXXXX.pdf")
                     fs.writeFileSync(temp_file, response.Body);
                     //image = gm(temp_file);
-                    gm.identify(temp_file, function(err, features) {
+                    gm(temp_file).identify(function(err, features) {
                         if (err) throw err;
                         console.log(features);
                     });
