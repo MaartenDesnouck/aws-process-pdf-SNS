@@ -13,6 +13,12 @@ var ALLOWED_FILETYPES = ['pdf'];
 var s3 = new AWS.S3();
 var sns = new AWS.SNS();
 
+var utils = {
+    decodeKey: function(key) {
+        return decodeURIComponent(key).replace(/\+/g, ' ');
+    }
+};
+
 exports.handler = function(event, context) {
     //TESTCODE
     var eventText = JSON.stringify(event, null, 2);
