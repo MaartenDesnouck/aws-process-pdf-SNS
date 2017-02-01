@@ -1,7 +1,10 @@
+var async = require("async");
 var AWS = require("aws-sdk");
 var gm = require("gm").subClass({
     imageMagick: true
 });
+var fs = require("fs");
+var mktemp = require("mktemp");
 
 var THUMB_WIDTH = 150;
 var THUMB_HEIGHT = 150;
