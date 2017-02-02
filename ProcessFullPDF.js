@@ -5,7 +5,6 @@ var gm = require("gm").subClass({
 });
 var fs = require("fs");
 var mktemp = require("mktemp");
-
 var pdfPageCount = require('pdf_page_count');
 
 var THUMB_WIDTH = 150;
