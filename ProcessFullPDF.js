@@ -79,12 +79,17 @@ exports.handler = function(event, context) {
                         (function() {
                             var j = i;
                             process.nextTick(function() {
+                                var obj = new Object();
+                                obj.bucket = srcBucket;
+                                obj.file = srcKey;
+                                obj.page = j;
+                                var jsonString = JSON.stringify(obj);
                                 var parameters = {
-                                    Message: j,
-                                    Subject: "Test SNS From Lambda",
+                                    Message: jsonString,
+                                    Subject: "processPDF",
                                     TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
                                 };
-                                sns.publish(params, function(err, data) {
+                                sns.publish(parameters, function(err, data) {
                                     if (err) {
                                         console.log('Error sending a message', err);
                                     } else {
