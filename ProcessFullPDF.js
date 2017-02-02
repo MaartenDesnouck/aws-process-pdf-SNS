@@ -6,6 +6,8 @@ var gm = require("gm").subClass({
 var fs = require("fs");
 var mktemp = require("mktemp");
 
+var pdfutils = require('pdfutils').pdfutils;
+
 var THUMB_WIDTH = 150;
 var THUMB_HEIGHT = 150;
 var ALLOWED_FILETYPES = ['pdf'];
@@ -57,29 +59,31 @@ exports.handler = function(event, context) {
                     Key: srcKey
                 }, next);
             },
-
-            function splitPdf(response, next) {
-                var temp_file, image;
-
+            function prepareTemp(response, next) {
                 if (fileType === "pdf") {
                     temp_file = mktemp.createFileSync("/tmp/XXXXXXXXXX.pdf")
                     fs.writeFileSync(temp_file, response.Body);
-                    //image = gm(temp_file);
-                    gm(temp_file).identify(['-format', '%n'], function(err, features) {
-                        if (err) throw err;
-                        console.log(features);
-                    });
-                    var eventText = JSON.stringify('derp', null, 2);
-                    var params = {
-                        Message: eventText,
-                        Subject: "PDF_PAGE",
-                        TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
-                    };
-                    sns.publish(params);
+                    next(null, temp_file);
                 } else {
                     console.error("Filetype " + fileType + " not valid for this function, exiting");
                     return;
                 }
+            },
+            function splitPdf(temp_file, page, next) {
+                pdfutils(temp_file, function(err, doc) {
+                    console.log(doc.length);
+                });
+                pagePerPage(null, temp_file, 0, function(err) {
+                    if (err) {
+                        console.error(
+                            "Unable to generate thumbnails for '" + srcBucket + "/" + srcKey + "'" +
+                            " due to error: " + err
+                        );
+                    } else {
+                        console.log("Created thumbnails for '" + srcBucket + "/" + srcKey + "'");
+                    }
+                    context.done();
+                });
             }
 
         ],
@@ -96,3 +100,16 @@ exports.handler = function(event, context) {
             context.done();
         });
 };
+
+function pagePerPage(err, temp_file, page, callback) {
+    image = gm(temp_file + "[" + page + "]");
+    image.size(function(err, size) {
+        if (err) {
+            callback(null);
+        } else {
+            console.log('PAGE ' + page + ': ' + size.width + 'x' + size.height);
+            page += 1;
+            pagePerPage(null, temp_file, page, callback);
+        }
+    });
+}
