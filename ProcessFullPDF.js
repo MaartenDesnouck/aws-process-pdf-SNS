@@ -4,8 +4,6 @@ var fs = require("fs");
 var mktemp = require("mktemp");
 var pdfPageCount = require('pdf_page_count');
 
-var THUMB_WIDTH = 150;
-var THUMB_HEIGHT = 150;
 var ALLOWED_FILETYPES = ['pdf'];
 
 var s3 = new AWS.S3();
@@ -34,12 +32,6 @@ exports.handler = function(event, context) {
         }
     });
 
-    var params2 = {
-        Message: "derp",
-        Subject: "Test SNS From Lambda",
-        TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
-    };
-    sns.publish(params2);
 
     //SRS CODE
     var srcBucket = event.Records[0].s3.bucket.name;
@@ -83,16 +75,25 @@ exports.handler = function(event, context) {
                         return;
                     }
                     console.log("PDF has " + resp.data + " pages.");
-                    // for (var i = 0; i & lt; resp.data; i++) {
-                    //     (function(i) {
-                    //         var params = {
-                    //             Message: page,
-                    //             Subject: "Test SNS From Lambda",
-                    //             TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
-                    //         };
-                    //         sns.publish(params);
-                    //     })(i);
-                    // }
+                    for (var i = 0; i < resp.data; i++) {
+                        (function() {
+                            var j = i;
+                            process.nextTick(function() {
+                                var parameters = {
+                                    Message: j,
+                                    Subject: "Test SNS From Lambda",
+                                    TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
+                                };
+                                sns.publish(params, function(err, data) {
+                                    if (err) {
+                                        console.log('Error sending a message', err);
+                                    } else {
+                                        console.log('Sent message:', data.MessageId);
+                                    }
+                                });
+                            });
+                        })();
+                    }
                 });
             }
         ],
