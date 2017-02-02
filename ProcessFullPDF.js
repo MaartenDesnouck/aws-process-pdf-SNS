@@ -29,7 +29,6 @@ exports.handler = function(event, context) {
         Subject: "Test SNS From Lambda",
         TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
     };
-    //sns.publish(params, context.done);
     sns.publish(params);
 
 
@@ -69,14 +68,12 @@ exports.handler = function(event, context) {
                 }
             },
             function splitPdf(temp_file, page, next) {
-                pdfPageCount.count(file, function(resp) {
+                pdfPageCount.count(temp_file, function(resp) {
                     if (!resp.success) {
                         console.log("Something went wrong: " + resp.error);
                         return;
                     }
-
-                    if (resp.data == 1) console.log("Yayy, test with one page and giving raw data works!");
-                    else console.log("Oh no..tool says the PDF has " + res.data + " pages, but it should say it has one page!");
+                    console.log("PDF has " + res.data + " pages.");
                 });
                 pagePerPage(null, temp_file, 0, function(err) {
                     if (err) {
