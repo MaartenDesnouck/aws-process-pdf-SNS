@@ -1,8 +1,5 @@
 var async = require("async");
 var AWS = require("aws-sdk");
-var gm = require("gm").subClass({
-    imageMagick: true
-});
 var fs = require("fs");
 var mktemp = require("mktemp");
 var pdfPageCount = require('pdf_page_count');
@@ -29,8 +26,19 @@ exports.handler = function(event, context) {
         Subject: "Test SNS From Lambda",
         TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
     };
-    sns.publish(params);
+    sns.publish(params, function(err) {
+        console.log("S1");
+    });
 
+    var params = {
+        Message: "derp",
+        Subject: "Test SNS From Lambda",
+        TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
+    };
+    sns.publish(params);
+    sns.publish(params, function(err) {
+        console.log("S2");
+    });
 
     //SRS CODE
     var srcBucket = event.Records[0].s3.bucket.name;
@@ -67,25 +75,25 @@ exports.handler = function(event, context) {
                     return;
                 }
             },
-            function splitPdf(temp_file, page, next) {
+            function sendSNS(temp_file, page, next) {
                 pdfPageCount.count(temp_file, function(resp) {
                     if (!resp.success) {
                         console.log("Something went wrong: " + resp.error);
                         return;
                     }
                     console.log("PDF has " + resp.data + " pages.");
-                });
-                pagePerPage(null, temp_file, 0, function(err) {
-                    if (err) {
-                        console.error(
-                            "Unable to generate thumbnails for '" + srcBucket + "/" + srcKey + "'" +
-                            " due to error: " + err
-                        );
-                    } else {
-                        console.log("Created thumbnails for '" + srcBucket + "/" + srcKey + "'");
+                    for (var i = 0; i & lt; resp.data; i++) {
+                        (function(i) {
+                            var params = {
+                                Message: page,
+                                Subject: "Test SNS From Lambda",
+                                TopicArn: "arn:aws:sns:us-west-2:484048752437:processPDF"
+                            };
+                            sns.publish(params);
+                        })(i);
                     }
-                    context.done();
                 });
+
             }
 
         ],
@@ -102,16 +110,3 @@ exports.handler = function(event, context) {
             context.done();
         });
 };
-
-function pagePerPage(err, temp_file, page, callback) {
-    image = gm(temp_file + "[" + page + "]");
-    image.size(function(err, size) {
-        if (err) {
-            callback(null);
-        } else {
-            console.log('PAGE ' + page + ': ' + size.width + 'x' + size.height);
-            page += 1;
-            pagePerPage(null, temp_file, page, callback);
-        }
-    });
-}
