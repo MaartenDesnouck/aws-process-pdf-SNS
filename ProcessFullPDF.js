@@ -6,7 +6,7 @@ var gm = require("gm").subClass({
 var fs = require("fs");
 var mktemp = require("mktemp");
 
-var pdfutils = require('pdfutils').pdfutils;
+var pdfPageCount = require('pdf_page_count');
 
 var THUMB_WIDTH = 150;
 var THUMB_HEIGHT = 150;
@@ -70,8 +70,14 @@ exports.handler = function(event, context) {
                 }
             },
             function splitPdf(temp_file, page, next) {
-                pdfutils(temp_file, function(err, doc) {
-                    console.log(doc.length);
+                pdfPageCount.count(file, function(resp) {
+                    if (!resp.success) {
+                        console.log("Something went wrong: " + resp.error);
+                        return;
+                    }
+
+                    if (resp.data == 1) console.log("Yayy, test with one page and giving raw data works!");
+                    else console.log("Oh no..tool says the PDF has " + res.data + " pages, but it should say it has one page!");
                 });
                 pagePerPage(null, temp_file, 0, function(err) {
                     if (err) {
