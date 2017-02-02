@@ -7,7 +7,7 @@ Resources:
     Properties:
       BucketName: desnouckuploads
 
-  CreateThumbnail:
+  ProcessFullPDF:
     Type: AWS::Serverless::Function
     Properties:
       Handler: ProcessFullPDF.handler
