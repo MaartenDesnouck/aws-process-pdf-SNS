@@ -73,7 +73,7 @@ exports.handler = function(event, context) {
                         console.log("Something went wrong: " + resp.error);
                         return;
                     }
-                    console.log("PDF has " + res.data + " pages.");
+                    console.log("PDF has " + resp.data + " pages.");
                 });
                 pagePerPage(null, temp_file, 0, function(err) {
                     if (err) {
